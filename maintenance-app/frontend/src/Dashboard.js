@@ -9,7 +9,7 @@ export default function Dashboard({ goBack }) {
   /* ================= API ================= */
   const API =
     process.env.REACT_APP_API_URL ||
-    "https://real-time-reporting.onrender.com";
+    "https://real-time-reporting.onrender.com" || "http://localhost:5000";
 
   /* ================= FETCH REPORTS ================= */
   const fetchReports = useCallback(async () => {
@@ -19,7 +19,7 @@ export default function Dashboard({ goBack }) {
     } catch (err) {
       console.error("Fetch Error:", err);
     }
-  }, [ ]);
+  }, [API]);
 
   useEffect(() => {
     fetchReports();
