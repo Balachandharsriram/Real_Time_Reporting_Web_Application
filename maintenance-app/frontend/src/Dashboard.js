@@ -45,22 +45,12 @@ export default function Dashboard({ goBack }) {
   };
 
   /* ================= PREVIEW PDF ================= */
-  const previewPDF = async (id) => {
-    try {
-      const res = await axios.get(
-        `${API}/api/reports/${id}/download`,
-        { responseType: "blob" }
-      );
+  const previewPDF = (id) => {
+  const url = `${API}/api/reports/${id}/download`;
 
-      const file = new Blob([res.data], { type: "application/pdf" });
-      const fileURL = URL.createObjectURL(file);
-
-      setPreviewUrl(fileURL);
-    } catch (err) {
-      console.error("Preview Error:", err);
-      alert("Preview failed");
-    }
-  };
+  // Mobile friendly
+  window.open(url, "_blank");
+};
 
   /* ================= DELETE ================= */
   const deleteReport = async (id) => {
