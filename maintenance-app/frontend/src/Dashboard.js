@@ -2,42 +2,61 @@ import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import "./App.css";
 
+const API =
+  process.env.REACT_APP_API_URL ||
+  "https://real-time-reporting.onrender.com";
+
 export default function Dashboard({ goBack }) {
   const [reports, setReports] = useState([]);
-  const [previewUrl, setPreviewUrl] = useState(null);
-
-  /* ================= API ================= */
-  const API =
-    process.env.REACT_APP_API_URL ||
-    "http://localhost:5000";
 
   /* ================= FETCH REPORTS ================= */
+
   const fetchReports = useCallback(async () => {
     try {
-      const res = await axios.get(`${API}/api/reports`);
+      const res = await axios.get(
+        `${API}/api/reports`
+      );
+
       setReports(res.data || []);
+
     } catch (err) {
       console.error("Fetch Error:", err);
+      alert("Failed to fetch reports");
     }
-  }, [API]);
+  }, []);
 
   useEffect(() => {
     fetchReports();
   }, [fetchReports]);
 
   /* ================= DOWNLOAD PDF ================= */
+
   const downloadPDF = async (id) => {
     try {
       const res = await axios.get(
         `${API}/api/reports/${id}/download`,
-        { responseType: "blob" }
+        {
+          responseType: "blob",
+        }
       );
 
-      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const fileURL = window.URL.createObjectURL(
+        new Blob([res.data], {
+          type: "application/pdf",
+        })
+      );
+
       const link = document.createElement("a");
-      link.href = url;
+
+      link.href = fileURL;
       link.download = "report.pdf";
+
+      document.body.appendChild(link);
+
       link.click();
+
+      link.remove();
+
     } catch (err) {
       console.error("Download Error:", err);
       alert("Download failed");
@@ -45,20 +64,32 @@ export default function Dashboard({ goBack }) {
   };
 
   /* ================= PREVIEW PDF ================= */
+
   const previewPDF = (id) => {
-  const url = `${API}/api/reports/${id}/download`;
+    window.open(
+      `${API}/api/reports/${id}`,
+      "_blank"
+    );
+  };
 
-  // Mobile friendly
-  window.open(url, "_blank");
-};
+  /* ================= DELETE REPORT ================= */
 
-  /* ================= DELETE ================= */
   const deleteReport = async (id) => {
-    if (!window.confirm("Delete this report?")) return;
+    const confirmDelete = window.confirm(
+      "Delete this report?"
+    );
+
+    if (!confirmDelete) return;
 
     try {
-      await axios.delete(`${API}/api/reports/${id}`);
+      await axios.delete(
+        `${API}/api/reports/${id}`
+      );
+
       fetchReports();
+
+      alert("Report deleted");
+
     } catch (err) {
       console.error("Delete Error:", err);
       alert("Delete failed");
@@ -67,11 +98,15 @@ export default function Dashboard({ goBack }) {
 
   return (
     <div className="main">
+
       <div className="card">
+
         <h2>Reports Dashboard</h2>
 
         <div className="table-container">
+
           <table>
+
             <thead>
               <tr>
                 <th>Site</th>
@@ -84,69 +119,85 @@ export default function Dashboard({ goBack }) {
             </thead>
 
             <tbody>
-              {(reports || []).map((r) => (
-                <tr key={r._id}>
-                  <td>{r.siteName}</td>
-                  <td>{r.workType}</td>
-                  <td>{r.priority}</td>
-                  <td>{r.status}</td>
-                  <td>
-                    {r.dateTime
-                      ? new Date(r.dateTime).toLocaleString()
-                      : "-"}
-                  </td>
 
-                  <td>
-                    <div className="actions">
-                      <button
-                        className="btn btn-preview"
-                        onClick={() => previewPDF(r._id)}
-                      >
-                        Preview
-                      </button>
+              {reports.length > 0 ? (
+                reports.map((r) => (
+                  <tr key={r._id}>
 
-                      <button
-                        className="btn btn-download"
-                        onClick={() => downloadPDF(r._id)}
-                      >
-                        Download
-                      </button>
+                    <td>{r.siteName}</td>
 
-                      <button
-                        className="btn btn-delete"
-                        onClick={() => deleteReport(r._id)}
-                      >
-                        Delete
-                      </button>
-                    </div>
+                    <td>{r.workType}</td>
+
+                    <td>{r.priority}</td>
+
+                    <td>{r.status}</td>
+
+                    <td>{r.dateTime || "-"}</td>
+
+                    <td>
+                      <div className="actions">
+
+                        <button
+                          className="btn btn-preview"
+                          onClick={() =>
+                            previewPDF(r._id)
+                          }
+                        >
+                          Preview
+                        </button>
+
+                        <button
+                          className="btn btn-download"
+                          onClick={() =>
+                            downloadPDF(r._id)
+                          }
+                        >
+                          Download
+                        </button>
+
+                        <button
+                          className="btn btn-delete"
+                          onClick={() =>
+                            deleteReport(r._id)
+                          }
+                        >
+                          Delete
+                        </button>
+
+                      </div>
+                    </td>
+
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan="6"
+                    style={{
+                      textAlign: "center",
+                      padding: "20px",
+                    }}
+                  >
+                    No Reports Found
                   </td>
                 </tr>
-              ))}
+              )}
+
             </tbody>
+
           </table>
+
         </div>
 
-        <button className="button" onClick={goBack}>
+        <button
+          className="button"
+          onClick={goBack}
+        >
           Back to Form
         </button>
+
       </div>
-router.get("/", getReports);
-router.delete("/:id", deleteReport);
-router.get("/:id/download", downloadReport);
 
-      {/* ================= MODAL PREVIEW ================= */}
-      {previewUrl && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <div className="modal-header">
-              <h3>Report Preview</h3>
-              <button onClick={() => setPreviewUrl(null)}>Close</button>
-            </div>
-
-            <iframe src={previewUrl} title="PDF Preview" />
-          </div>
-        </div>
-      )}
     </div>
   );
 }
