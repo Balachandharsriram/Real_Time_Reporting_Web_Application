@@ -1,36 +1,47 @@
-/* ===== GLOBAL ===== */
-body {
+/* ================= GLOBAL ================= */
+
+* {
   margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
   font-family: "Segoe UI", sans-serif;
   background: #eef2f7;
   color: #1e293b;
 }
 
-/* ===== LAYOUT ===== */
+/* ================= LAYOUT ================= */
+
 .layout {
   display: flex;
   min-height: 100vh;
 }
 
-/* ===== SIDEBAR ===== */
+/* ================= SIDEBAR ================= */
+
 .sidebar {
   width: 240px;
-  background: linear-gradient(180deg, #1e293b, #0f172a);
+  background: linear-gradient(180deg, #0f172a, #1e293b);
   color: white;
   padding: 25px 20px;
 }
 
 .sidebar h2 {
-  margin-bottom: 25px;
+  margin-bottom: 30px;
+  font-size: 24px;
+  font-weight: 700;
 }
 
 .sidebar p {
-  padding: 10px;
-  margin: 5px 0;
-  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 10px;
+  border-radius: 8px;
   cursor: pointer;
-  color: #cbd5f5;
-  transition: 0.2s;
+  color: #cbd5e1;
+  transition: 0.2s ease;
+  font-size: 15px;
 }
 
 .sidebar p:hover {
@@ -38,71 +49,81 @@ body {
   color: white;
 }
 
-/* ===== MAIN ===== */
+/* ================= MAIN ================= */
+
 .main {
   flex: 1;
   padding: 30px;
 }
 
-/* ===== CARD ===== */
+/* ================= CARD ================= */
+
 .card {
   background: white;
+  border-radius: 14px;
   padding: 25px;
-  border-radius: 12px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
 .card h2 {
-  margin-bottom: 20px;
+  margin-bottom: 25px;
+  color: #0f172a;
 }
 
-/* ===== GRID ===== */
+/* ================= GRID ================= */
+
 .grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 20px;
 }
 
-/* ===== INPUTS ===== */
+/* ================= FORM ================= */
+
 .field {
   display: flex;
   flex-direction: column;
 }
 
 .field label {
+  margin-bottom: 6px;
   font-weight: 600;
-  margin-bottom: 5px;
+  color: #334155;
 }
 
 .field input,
 .field select,
 .field textarea {
-  padding: 10px;
+  padding: 11px;
   border: 1px solid #cbd5e1;
-  border-radius: 6px;
+  border-radius: 8px;
+  font-size: 14px;
   transition: 0.2s;
 }
 
 .field input:focus,
 .field select:focus,
 .field textarea:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
   outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
-/* ===== ERROR ===== */
+textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+/* ================= ERROR ================= */
+
 .error {
   color: #dc2626;
   font-size: 12px;
+  margin-top: 4px;
 }
 
-/* ===== TEXTAREA ===== */
-textarea {
-  min-height: 80px;
-}
+/* ================= IMAGE SECTION ================= */
 
-/* ===== IMAGE SECTION ===== */
 .image-row {
   display: flex;
   gap: 20px;
@@ -111,11 +132,10 @@ textarea {
 
 .image-box {
   flex: 1;
-  border: 1px dashed #cbd5e1;
-  padding: 10px;
-  border-radius: 10px;
-  text-align: center;
   background: #f8fafc;
+  border: 2px dashed #cbd5e1;
+  border-radius: 12px;
+  padding: 15px;
   transition: 0.2s;
 }
 
@@ -125,153 +145,184 @@ textarea {
 
 .image-box img {
   width: 100%;
-  max-height: 220px;
+  height: 250px;
   object-fit: cover;
-  border-radius: 8px;
+  border-radius: 10px;
   margin-top: 10px;
 }
 
-/* ===== MAIN BUTTON ===== */
+/* ================= MAIN BUTTON ================= */
+
 .button {
   margin-top: 25px;
-  padding: 12px;
   width: 100%;
-  background: linear-gradient(135deg, #2563eb, #1e40af);
-  color: white;
+  padding: 14px;
   border: none;
-  border-radius: 8px;
-  font-weight: 600;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: white;
+  font-size: 15px;
+  font-weight: 700;
   cursor: pointer;
   transition: 0.3s;
 }
 
 .button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(37, 99, 235, 0.3);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
 }
 
-/* ===== TABLE ===== */
+/* ================= TABLE ================= */
+
 .table-container {
+  width: 100%;
   overflow-x: auto;
-  margin-top: 20px;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  border-radius: 10px;
-  overflow: hidden;
+  margin-top: 20px;
+  min-width: 750px;
 }
 
 th {
   background: #2563eb;
   color: white;
-  padding: 12px;
+  padding: 14px;
+  text-align: left;
+  font-size: 14px;
 }
 
 td {
-  padding: 10px;
+  padding: 12px;
   border-bottom: 1px solid #e2e8f0;
+  font-size: 14px;
 }
 
 tr:hover {
-  background: #f1f5f9;
+  background: #f8fafc;
 }
 
-/* ===== ACTION BUTTONS ===== */
+/* ================= ACTION BUTTONS ================= */
+
 .actions {
   display: flex;
-  gap: 8px;
+  gap: 10px;
 }
 
-/* Common button style */
+/* COMMON BUTTON */
+
 .btn {
-  padding: 6px 10px;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
+  padding: 8px 14px;
   color: white;
   cursor: pointer;
   font-size: 13px;
+  font-weight: 600;
   transition: 0.2s;
 }
 
-/* Preview (Purple) */
+/* PREVIEW */
+
 .btn-preview {
-  background: #7c3aed;
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
 }
 
 .btn-preview:hover {
-  background: #6d28d9;
+  transform: scale(1.05);
 }
 
-/* Download (Green) */
+/* DOWNLOAD */
+
 .btn-download {
-  background: #16a34a;
+  background: linear-gradient(135deg, #16a34a, #15803d);
 }
 
 .btn-download:hover {
-  background: #15803d;
+  transform: scale(1.05);
 }
 
-/* Delete (Red) */
+/* DELETE */
+
 .btn-delete {
-  background: #dc2626;
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
 }
 
 .btn-delete:hover {
-  background: #b91c1c;
+  transform: scale(1.05);
 }
 
-/* ===== MODAL ===== */
+/* ================= MODAL ================= */
+
 .modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.7);
+  inset: 0;
+  background: rgba(15, 23, 42, 0.75);
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 999;
 }
 
 .modal {
   width: 95%;
-  max-width: 1000px;
-  height: 90vh;
+  max-width: 1100px;
+  height: 92vh;
   background: white;
-  border-radius: 12px;
+  border-radius: 16px;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
+/* ================= MODAL HEADER ================= */
+
 .modal-header {
+  background: #0f172a;
+  color: white;
+  padding: 14px 18px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px;
-  background: #1e293b;
-  color: white;
+}
+
+.modal-header h3 {
+  font-size: 18px;
 }
 
 .modal-header button {
   background: #ef4444;
   border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
   color: white;
-  padding: 6px 12px;
-  border-radius: 6px;
   cursor: pointer;
+  font-weight: 600;
 }
 
-/* PDF Preview */
+/* ================= PDF ================= */
+
 .modal iframe {
   flex: 1;
+  width: 100%;
   border: none;
-  background: #e5e7eb;
+  background: #cbd5e1;
 }
 
-/* ===== MOBILE ===== */
+/* ================= LOADING ================= */
+
+.loading {
+  text-align: center;
+  padding: 30px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #2563eb;
+}
+
+/* ================= MOBILE ================= */
+
 @media (max-width: 768px) {
   .layout {
     flex-direction: column;
@@ -294,7 +345,21 @@ tr:hover {
     flex-direction: column;
   }
 
-  table {
-    font-size: 12px;
+  .actions {
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+  }
+
+  .modal {
+    width: 100%;
+    height: 100vh;
+    border-radius: 0;
+  }
+
+  .modal iframe {
+    height: 100%;
   }
 }
