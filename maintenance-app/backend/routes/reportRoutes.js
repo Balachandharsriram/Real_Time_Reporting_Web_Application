@@ -38,6 +38,7 @@ const upload = multer({
       "image/jpg",
       "image/png",
       "image/webp",
+      "image/heic",
     ];
 
     if (allowedTypes.includes(file.mimetype)) {
@@ -63,7 +64,7 @@ const generatePDF = (
   doc
     .fontSize(20)
     .fillColor("#0f172a")
-    .text("EMERGENCY WORK REPORT", {
+    .text("WORK REPORT", {
       align: "center",
     });
 
@@ -235,7 +236,7 @@ const generatePDF = (
       50,
       760,
       {
-        align: "center",
+        align: "bottom",
       }
     );
 
