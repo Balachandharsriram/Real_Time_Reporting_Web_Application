@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+
 const PDFDocument = require("pdfkit");
 const multer = require("multer");
 const fs = require("fs");
@@ -7,58 +8,101 @@ const path = require("path");
 
 const Report = require("../models/Report");
 
-/* ================= MULTER ================= */
+/* ======================================================
+   MULTER CONFIG
+====================================================== */
 
-const upload = multer({
-  dest: "uploads/",
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/");
+  },
+
+  filename: (req, file, cb) => {
+    const uniqueName =
+      Date.now() + "-" + file.originalname.replace(/\s/g, "");
+
+    cb(null, uniqueName);
+  },
 });
 
-/* ================= PDF GENERATOR ================= */
+const upload = multer({
+  storage,
 
-const generatePDF = (doc, data, beforePath, afterPath) => {
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB
+  },
+
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/webp",
+    ];
+
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only image files are allowed"));
+    }
+  },
+});
+
+/* ======================================================
+   PDF GENERATOR
+====================================================== */
+
+const generatePDF = (
+  doc,
+  data,
+  beforeImagePath,
+  afterImagePath
+) => {
   /* ===== HEADER ===== */
 
   doc
     .fontSize(20)
-    .fillColor("#1e293b")
+    .fillColor("#0f172a")
     .text("EMERGENCY WORK REPORT", {
       align: "center",
     });
 
   doc.moveDown(1.5);
 
+  /* ===== REPORT TABLE ===== */
+
   const startX = 50;
   let y = doc.y;
 
-  const rowHeight = 25;
-  const col1Width = 170;
-  const col2Width = 320;
-
-  /* ===== DRAW TABLE ROW ===== */
+  const rowHeight = 28;
+  const col1Width = 180;
+  const col2Width = 310;
 
   const drawRow = (label, value) => {
     doc
       .lineWidth(1)
       .rect(startX, y, col1Width, rowHeight)
-      .stroke("#64748b");
+      .stroke("#94a3b8");
 
     doc
       .rect(startX + col1Width, y, col2Width, rowHeight)
-      .stroke("#64748b");
+      .stroke("#94a3b8");
 
     doc
-      .fillColor("#0f172a")
       .fontSize(10)
-      .text(label, startX + 8, y + 7);
+      .fillColor("#0f172a")
+      .text(label, startX + 10, y + 8);
 
     doc
       .fillColor("#334155")
-      .text(value || "-", startX + col1Width + 8, y + 7);
+      .text(
+        value ? String(value) : "-",
+        startX + col1Width + 10,
+        y + 8
+      );
 
     y += rowHeight;
   };
-
-  /* ===== TABLE DATA ===== */
 
   drawRow("Site Name", data.siteName);
   drawRow("Work Type", data.workType);
@@ -67,16 +111,16 @@ const generatePDF = (doc, data, beforePath, afterPath) => {
   drawRow("Workers", data.workers);
   drawRow("Supervisor", data.supervisor);
   drawRow("Location", data.location);
-  drawRow("Photo No", data.photoNo);
+  drawRow("Photo Number", data.photoNo);
   drawRow("Date & Time", data.dateTime);
 
   /* ===== DESCRIPTION ===== */
 
-  y += 20;
+  y += 25;
 
   doc
-    .fillColor("#1e293b")
     .fontSize(13)
+    .fillColor("#0f172a")
     .text("Description", startX, y);
 
   y += 20;
@@ -86,8 +130,8 @@ const generatePDF = (doc, data, beforePath, afterPath) => {
     .stroke("#94a3b8");
 
   doc
-    .fillColor("#334155")
     .fontSize(10)
+    .fillColor("#334155")
     .text(
       data.description || "No Description",
       startX + 10,
@@ -102,8 +146,8 @@ const generatePDF = (doc, data, beforePath, afterPath) => {
   y += 100;
 
   doc
-    .fillColor("#1e293b")
     .fontSize(13)
+    .fillColor("#0f172a")
     .text("Remarks", startX, y);
 
   y += 20;
@@ -113,8 +157,8 @@ const generatePDF = (doc, data, beforePath, afterPath) => {
     .stroke("#94a3b8");
 
   doc
-    .fillColor("#334155")
     .fontSize(10)
+    .fillColor("#334155")
     .text(
       data.remarks || "No Remarks",
       startX + 10,
@@ -128,42 +172,60 @@ const generatePDF = (doc, data, beforePath, afterPath) => {
 
   y += 110;
 
-  const imgWidth = 220;
-  const imgHeight = 150;
+  const imageWidth = 220;
+  const imageHeight = 150;
 
   /* BEFORE IMAGE */
 
-  if (beforePath && fs.existsSync(beforePath)) {
+  if (
+    beforeImagePath &&
+    fs.existsSync(beforeImagePath)
+  ) {
     doc
-      .fillColor("#1e293b")
       .fontSize(12)
+      .fillColor("#0f172a")
       .text("Before Work", startX, y);
 
-    doc.image(beforePath, startX, y + 20, {
-      fit: [imgWidth, imgHeight],
-      align: "center",
-      valign: "center",
-    });
+    doc.image(
+      beforeImagePath,
+      startX,
+      y + 20,
+      {
+        fit: [imageWidth, imageHeight],
+        align: "center",
+        valign: "center",
+      }
+    );
   }
 
   /* AFTER IMAGE */
 
-  if (afterPath && fs.existsSync(afterPath)) {
+  if (
+    afterImagePath &&
+    fs.existsSync(afterImagePath)
+  ) {
     doc
-      .fillColor("#1e293b")
       .fontSize(12)
-      .text("After Work", startX + imgWidth + 40, y);
+      .fillColor("#0f172a")
+      .text(
+        "After Work",
+        startX + imageWidth + 40,
+        y
+      );
 
-    doc.image(afterPath, startX + imgWidth + 40, y + 20, {
-      fit: [imgWidth, imgHeight],
-      align: "center",
-      valign: "center",
-    });
+    doc.image(
+      afterImagePath,
+      startX + imageWidth + 40,
+      y + 20,
+      {
+        fit: [imageWidth, imageHeight],
+        align: "center",
+        valign: "center",
+      }
+    );
   }
 
   /* ===== FOOTER ===== */
-
-  doc.moveDown(12);
 
   doc
     .fontSize(9)
@@ -180,26 +242,48 @@ const generatePDF = (doc, data, beforePath, afterPath) => {
   doc.end();
 };
 
-/* ================= CREATE REPORT ================= */
+/* ======================================================
+   CREATE REPORT
+====================================================== */
 
 router.post(
   "/",
   upload.fields([
-    { name: "beforeImage" },
-    { name: "afterImage" },
+    { name: "beforeImage", maxCount: 1 },
+    { name: "afterImage", maxCount: 1 },
   ]),
+
   async (req, res) => {
     try {
       const data = req.body;
 
+      /* ===== VALIDATION ===== */
+
+      if (
+        !data.siteName ||
+        !data.workType ||
+        !data.priority ||
+        !data.status
+      ) {
+        return res
+          .status(400)
+          .send("Required fields missing");
+      }
+
       /* ===== FILE PATHS ===== */
 
-      const beforePath = req.files?.beforeImage?.[0]?.path
-        ? req.files.beforeImage[0].path.replace(/\\/g, "/")
+      const beforeImage =
+        req.files?.beforeImage?.[0];
+
+      const afterImage =
+        req.files?.afterImage?.[0];
+
+      const beforePath = beforeImage
+        ? beforeImage.path.replace(/\\/g, "/")
         : null;
 
-      const afterPath = req.files?.afterImage?.[0]?.path
-        ? req.files.afterImage[0].path.replace(/\\/g, "/")
+      const afterPath = afterImage
+        ? afterImage.path.replace(/\\/g, "/")
         : null;
 
       /* ===== SAVE REPORT ===== */
@@ -217,7 +301,10 @@ router.post(
         size: "A4",
       });
 
-      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader(
+        "Content-Type",
+        "application/pdf"
+      );
 
       res.setHeader(
         "Content-Disposition",
@@ -235,19 +322,28 @@ router.post(
 
     } catch (err) {
       console.error(err);
-      res.status(500).send("PDF generation failed");
+
+      res
+        .status(500)
+        .send("Failed to generate report");
     }
   }
 );
 
-/* ================= PREVIEW REPORT ================= */
+/* ======================================================
+   PREVIEW REPORT
+====================================================== */
 
 router.get("/:id", async (req, res) => {
   try {
-    const report = await Report.findById(req.params.id);
+    const report = await Report.findById(
+      req.params.id
+    );
 
     if (!report) {
-      return res.status(404).send("Report not found");
+      return res
+        .status(404)
+        .send("Report not found");
     }
 
     const doc = new PDFDocument({
@@ -255,7 +351,10 @@ router.get("/:id", async (req, res) => {
       size: "A4",
     });
 
-    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Type",
+      "application/pdf"
+    );
 
     res.setHeader(
       "Content-Disposition",
@@ -265,11 +364,19 @@ router.get("/:id", async (req, res) => {
     doc.pipe(res);
 
     const beforePath = report.beforeImage
-      ? path.join(__dirname, "..", report.beforeImage)
+      ? path.join(
+          __dirname,
+          "..",
+          report.beforeImage
+        )
       : null;
 
     const afterPath = report.afterImage
-      ? path.join(__dirname, "..", report.afterImage)
+      ? path.join(
+          __dirname,
+          "..",
+          report.afterImage
+        )
       : null;
 
     generatePDF(
@@ -281,18 +388,25 @@ router.get("/:id", async (req, res) => {
 
   } catch (err) {
     console.error(err);
+
     res.status(500).send("Preview failed");
   }
 });
 
-/* ================= DOWNLOAD REPORT ================= */
+/* ======================================================
+   DOWNLOAD REPORT
+====================================================== */
 
 router.get("/:id/download", async (req, res) => {
   try {
-    const report = await Report.findById(req.params.id);
+    const report = await Report.findById(
+      req.params.id
+    );
 
     if (!report) {
-      return res.status(404).send("Report not found");
+      return res
+        .status(404)
+        .send("Report not found");
     }
 
     const doc = new PDFDocument({
@@ -300,7 +414,10 @@ router.get("/:id/download", async (req, res) => {
       size: "A4",
     });
 
-    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Type",
+      "application/pdf"
+    );
 
     res.setHeader(
       "Content-Disposition",
@@ -310,11 +427,19 @@ router.get("/:id/download", async (req, res) => {
     doc.pipe(res);
 
     const beforePath = report.beforeImage
-      ? path.join(__dirname, "..", report.beforeImage)
+      ? path.join(
+          __dirname,
+          "..",
+          report.beforeImage
+        )
       : null;
 
     const afterPath = report.afterImage
-      ? path.join(__dirname, "..", report.afterImage)
+      ? path.join(
+          __dirname,
+          "..",
+          report.afterImage
+        )
       : null;
 
     generatePDF(
@@ -326,11 +451,14 @@ router.get("/:id/download", async (req, res) => {
 
   } catch (err) {
     console.error(err);
+
     res.status(500).send("Download failed");
   }
 });
 
-/* ================= GET ALL REPORTS ================= */
+/* ======================================================
+   GET ALL REPORTS
+====================================================== */
 
 router.get("/", async (req, res) => {
   try {
@@ -342,45 +470,58 @@ router.get("/", async (req, res) => {
 
   } catch (err) {
     console.error(err);
+
     res.status(500).send("Fetch failed");
   }
 });
 
-/* ================= DELETE REPORT ================= */
+/* ======================================================
+   DELETE REPORT
+====================================================== */
 
 router.delete("/:id", async (req, res) => {
   try {
-    const report = await Report.findById(req.params.id);
+    const report = await Report.findById(
+      req.params.id
+    );
 
     if (!report) {
-      return res.status(404).send("Report not found");
+      return res
+        .status(404)
+        .send("Report not found");
     }
 
-    /* DELETE FILES */
+    /* ===== DELETE BEFORE IMAGE ===== */
 
-    if (
-      report.beforeImage &&
-      fs.existsSync(
-        path.join(__dirname, "..", report.beforeImage)
-      )
-    ) {
-      fs.unlinkSync(
-        path.join(__dirname, "..", report.beforeImage)
+    if (report.beforeImage) {
+      const beforePath = path.join(
+        __dirname,
+        "..",
+        report.beforeImage
       );
+
+      if (fs.existsSync(beforePath)) {
+        fs.unlinkSync(beforePath);
+      }
     }
 
-    if (
-      report.afterImage &&
-      fs.existsSync(
-        path.join(__dirname, "..", report.afterImage)
-      )
-    ) {
-      fs.unlinkSync(
-        path.join(__dirname, "..", report.afterImage)
+    /* ===== DELETE AFTER IMAGE ===== */
+
+    if (report.afterImage) {
+      const afterPath = path.join(
+        __dirname,
+        "..",
+        report.afterImage
       );
+
+      if (fs.existsSync(afterPath)) {
+        fs.unlinkSync(afterPath);
+      }
     }
 
-    await Report.findByIdAndDelete(req.params.id);
+    await Report.findByIdAndDelete(
+      req.params.id
+    );
 
     res.json({
       message: "Report deleted successfully",
@@ -388,6 +529,7 @@ router.delete("/:id", async (req, res) => {
 
   } catch (err) {
     console.error(err);
+
     res.status(500).send("Delete failed");
   }
 });
