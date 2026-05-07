@@ -3,7 +3,11 @@ import axios from "axios";
 import "./App.css";
 import Dashboard from "./Dashboard";
 
-const API = "https://real-time-reporting.onrender.com";
+/* ================= API ================= */
+
+const API =
+  process.env.REACT_APP_API_URL ||
+  "https://real-time-reporting.onrender.com";
 
 export default function App() {
   const [page, setPage] = useState("form");
@@ -22,8 +26,10 @@ export default function App() {
   });
 
   const [errors, setErrors] = useState({});
+
   const [beforeImage, setBeforeImage] = useState(null);
   const [afterImage, setAfterImage] = useState(null);
+
   const [loading, setLoading] = useState(false);
 
   /* ================= HANDLE INPUT ================= */
@@ -92,37 +98,49 @@ export default function App() {
 
       /* ===== API REQUEST ===== */
 
-      const res = await axios.post(
+      const response = await axios.post(
         `${API}/api/reports`,
         data,
         {
           headers: {
             "Content-Type": "multipart/form-data",
           },
+
           responseType: "blob",
+
+          timeout: 60000,
         }
       );
 
-      /* ===== DOWNLOAD PDF ===== */
+      /* ===== MOBILE SAFE DOWNLOAD ===== */
 
-      const fileURL = window.URL.createObjectURL(
-        new Blob([res.data], {
+      const pdfBlob = new Blob(
+        [response.data],
+        {
           type: "application/pdf",
-        })
+        }
       );
 
-      const link = document.createElement("a");
+      const pdfURL =
+        window.URL.createObjectURL(pdfBlob);
 
-      link.href = fileURL;
-      link.download = "report.pdf";
+      const link =
+        document.createElement("a");
+
+      link.href = pdfURL;
+
+      link.download =
+        `report-${Date.now()}.pdf`;
 
       document.body.appendChild(link);
 
       link.click();
 
-      link.remove();
+      document.body.removeChild(link);
 
-      /* ===== RESET FORM ===== */
+      window.URL.revokeObjectURL(pdfURL);
+
+      /* ===== RESET ===== */
 
       setForm({
         siteName: "",
@@ -140,12 +158,23 @@ export default function App() {
       setBeforeImage(null);
       setAfterImage(null);
 
-      alert("Report Generated Successfully");
+      alert(
+        "Report Generated Successfully"
+      );
 
     } catch (err) {
       console.error("Generate Error:", err);
 
-      alert("Report generation failed");
+      if (err.code === "ECONNABORTED") {
+        alert(
+          "Server timeout. Try smaller images."
+        );
+      } else {
+        alert(
+          "Report generation failed"
+        );
+      }
+
     } finally {
       setLoading(false);
     }
@@ -157,24 +186,38 @@ export default function App() {
       {/* ================= SIDEBAR ================= */}
 
       <div className="sidebar">
+
         <h2>Maintenance</h2>
 
-        <p onClick={() => setPage("form")}>
+        <p
+          onClick={() =>
+            setPage("form")
+          }
+        >
           Create Report
         </p>
 
-        <p onClick={() => setPage("dashboard")}>
+        <p
+          onClick={() =>
+            setPage("dashboard")
+          }
+        >
           View Reports
         </p>
+
       </div>
 
-      {/* ================= PAGE ================= */}
+      {/* ================= FORM PAGE ================= */}
 
       {page === "form" ? (
+
         <div className="main">
+
           <div className="card">
 
-            <h2>Emergency Work Report</h2>
+            <h2>
+              Emergency Work Report
+            </h2>
 
             <div className="grid">
 
@@ -189,7 +232,10 @@ export default function App() {
               <Select
                 label="Work Type"
                 name="workType"
-                options={["Repair", "Replacement"]}
+                options={[
+                  "Repair",
+                  "Replacement",
+                ]}
                 form={form}
                 errors={errors}
                 handleChange={handleChange}
@@ -198,7 +244,10 @@ export default function App() {
               <Select
                 label="Priority"
                 name="priority"
-                options={["Urgent", "Normal"]}
+                options={[
+                  "Urgent",
+                  "Normal",
+                ]}
                 form={form}
                 errors={errors}
                 handleChange={handleChange}
@@ -207,7 +256,11 @@ export default function App() {
               <Select
                 label="Status"
                 name="status"
-                options={["Pending", "Reporting", "Completed"]}
+                options={[
+                  "Pending",
+                  "Reporting",
+                  "Completed",
+                ]}
                 form={form}
                 errors={errors}
                 handleChange={handleChange}
@@ -238,7 +291,7 @@ export default function App() {
               />
 
               <Input
-                label="Supervisor Name"
+                label="Supervisor"
                 name="supervisor"
                 form={form}
                 errors={errors}
@@ -248,7 +301,7 @@ export default function App() {
             </div>
 
             <Textarea
-              label="Description (Optional)"
+              label="Description"
               name="description"
               form={form}
               handleChange={handleChange}
@@ -289,10 +342,19 @@ export default function App() {
             </button>
 
           </div>
+
         </div>
+
       ) : (
-        <Dashboard goBack={() => setPage("form")} />
+
+        <Dashboard
+          goBack={() =>
+            setPage("form")
+          }
+        />
+
       )}
+
     </div>
   );
 }
@@ -307,6 +369,7 @@ const Input = ({
   handleChange,
 }) => (
   <div className="field">
+
     <label>{label}</label>
 
     <input
@@ -317,8 +380,11 @@ const Input = ({
     />
 
     {errors[name] && (
-      <p className="error">{errors[name]}</p>
+      <p className="error">
+        {errors[name]}
+      </p>
     )}
+
   </div>
 );
 
@@ -333,6 +399,7 @@ const Select = ({
   handleChange,
 }) => (
   <div className="field">
+
     <label>{label}</label>
 
     <select
@@ -340,18 +407,27 @@ const Select = ({
       value={form[name]}
       onChange={handleChange}
     >
-      <option value="">Select</option>
+      <option value="">
+        Select
+      </option>
 
       {options.map((o) => (
-        <option key={o} value={o}>
+        <option
+          key={o}
+          value={o}
+        >
           {o}
         </option>
       ))}
+
     </select>
 
     {errors[name] && (
-      <p className="error">{errors[name]}</p>
+      <p className="error">
+        {errors[name]}
+      </p>
     )}
+
   </div>
 );
 
@@ -365,6 +441,7 @@ const Textarea = ({
   error,
 }) => (
   <div className="field">
+
     <label>{label}</label>
 
     <textarea
@@ -374,8 +451,11 @@ const Textarea = ({
     />
 
     {error && (
-      <p className="error">{error}</p>
+      <p className="error">
+        {error}
+      </p>
     )}
+
   </div>
 );
 
@@ -386,18 +466,28 @@ const ImageUpload = ({
   setImage,
   error,
 }) => {
-  const [preview, setPreview] = useState(null);
+  const [preview, setPreview] =
+    useState(null);
 
   const handleFile = (e) => {
     const file = e.target.files[0];
 
+    if (!file) return;
+
+    /* ===== FILE SIZE LIMIT ===== */
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert(
+        "Image must be below 5MB"
+      );
+      return;
+    }
+
     setImage(file);
 
-    if (file) {
-      setPreview(
-        URL.createObjectURL(file)
-      );
-    }
+    setPreview(
+      URL.createObjectURL(file)
+    );
   };
 
   return (
@@ -408,6 +498,7 @@ const ImageUpload = ({
       <input
         type="file"
         accept="image/*"
+        capture="environment"
         onChange={handleFile}
       />
 
@@ -419,7 +510,9 @@ const ImageUpload = ({
       )}
 
       {error && (
-        <p className="error">{error}</p>
+        <p className="error">
+          {error}
+        </p>
       )}
 
     </div>
