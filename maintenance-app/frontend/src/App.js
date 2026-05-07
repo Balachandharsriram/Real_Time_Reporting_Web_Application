@@ -498,6 +498,7 @@ const ImageUpload = ({
       <input
         type="file"
         accept="image/*"
+        capture="environment"
         onChange={handleFile}
       />
 
