@@ -19,7 +19,7 @@ const generatePDF = (report, res) => {
   doc
     .fontSize(22)
     .fillColor("#0f172a")
-    .text("EMERGENCY WORK REPORT", {
+    .text("WORK REPORT", {
       align: "center",
     });
 
@@ -175,7 +175,7 @@ const generatePDF = (report, res) => {
       50,
       760,
       {
-        align: "center",
+        align: "Bottom",
       }
     );
 
