@@ -236,7 +236,7 @@ const generatePDF = (
       50,
       760,
       {
-        align: "bottom",
+        align: "center",
       }
     );
 
